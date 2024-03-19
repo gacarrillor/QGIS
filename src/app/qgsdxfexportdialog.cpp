@@ -258,8 +258,6 @@ QVariant QgsVectorLayerAndAttributeModel::headerData( int section, Qt::Orientati
 QVariant QgsVectorLayerAndAttributeModel::data( const QModelIndex &idx, int role ) const
 {
   QgsVectorLayer *vl = vectorLayer( idx );
-  if ( !vl )
-    return QVariant();
 
   if ( idx.column() == LAYER_COL )
   {
@@ -309,7 +307,7 @@ QVariant QgsVectorLayerAndAttributeModel::data( const QModelIndex &idx, int role
       Q_ASSERT( hasUnchecked );
       return Qt::Unchecked;
     }
-    else if ( role == Qt::DisplayRole && mOverriddenName.contains( vl ) )
+    else if ( role == Qt::DisplayRole && vl && mOverriddenName.contains( vl ) )
     {
       return mOverriddenName[ vl ];
     }
@@ -318,7 +316,7 @@ QVariant QgsVectorLayerAndAttributeModel::data( const QModelIndex &idx, int role
       return QgsLayerTreeModel::data( idx, role );
     }
   }
-  else if ( idx.column() == OUTPUT_LAYER_ATTRIBUTE_COL )
+  else if ( idx.column() == OUTPUT_LAYER_ATTRIBUTE_COL && vl )
   {
     int idx = mAttributeIdx.value( vl, -1 );
     if ( role == Qt::EditRole )
@@ -339,7 +337,7 @@ QVariant QgsVectorLayerAndAttributeModel::data( const QModelIndex &idx, int role
   }
   else if ( idx.column() == ALLOW_DD_SYMBOL_BLOCKS_COL )
   {
-    if ( vl->geometryType() != Qgis::GeometryType::Point )
+    if ( !vl || vl->geometryType() != Qgis::GeometryType::Point )
     {
       return QVariant();
     }
@@ -356,7 +354,7 @@ QVariant QgsVectorLayerAndAttributeModel::data( const QModelIndex &idx, int role
   }
   else if ( idx.column() == MAXIMUM_DD_SYMBOL_BLOCKS_COL )
   {
-    if ( vl->geometryType() != Qgis::GeometryType::Point )
+    if ( !vl || vl->geometryType() != Qgis::GeometryType::Point )
     {
       return QVariant();
     }
