@@ -89,16 +89,23 @@ void QgsDxfExport::addLayers( const QList<DxfLayer> &layers )
 {
   mLayerList.clear();
   mLayerNameAttribute.clear();
+  mLayerOverriddenName.clear();
 
   mLayerList.reserve( layers.size() );
   for ( const DxfLayer &dxfLayer : layers )
   {
     mLayerList << dxfLayer.layer();
     if ( dxfLayer.layerOutputAttributeIndex() >= 0 )
+    {
       mLayerNameAttribute.insert( dxfLayer.layer()->id(), dxfLayer.layerOutputAttributeIndex() );
+    }
     if ( dxfLayer.buildDataDefinedBlocks() )
     {
       mLayerDDBlockMaxNumberOfClasses.insert( dxfLayer.layer()->id(), dxfLayer.dataDefinedBlocksMaximumNumberOfClasses() );
+    }
+    if ( dxfLayer.overriddenName() != QString() )
+    {
+      mLayerOverriddenName.insert( dxfLayer.layer()->id(), dxfLayer.overriddenName() );
     }
   }
 }
@@ -776,7 +783,7 @@ void QgsDxfExport::writeEntities()
     while ( featureIt.nextFeature( fet ) )
     {
       mRenderContext.expressionContext().setFeature( fet );
-      QString lName( dxfLayerName( job->splitLayerAttribute.isNull() ? job->layerTitle : fet.attribute( job->splitLayerAttribute ).toString() ) );
+      QString lName( dxfLayerName( job->splitLayerAttribute.isNull() ? job->layerDerivedName : fet.attribute( job->splitLayerAttribute ).toString() ) );
 
       sctx.setFeature( &fet );
 
@@ -903,7 +910,7 @@ void QgsDxfExport::prepareRenderers()
     const QgsFields fields = vl->fields();
     if ( splitLayerAttributeIndex >= 0 && splitLayerAttributeIndex < fields.size() )
       splitLayerAttribute = fields.at( splitLayerAttributeIndex ).name();
-    DxfLayerJob *job = new DxfLayerJob( vl, mMapSettings.layerStyleOverrides().value( vl->id() ), mRenderContext, this, splitLayerAttribute );
+    DxfLayerJob *job = new DxfLayerJob( vl, mMapSettings.layerStyleOverrides().value( vl->id() ), mRenderContext, this, splitLayerAttribute, layerName( vl ) );
     mJobs.append( job );
   }
 }
@@ -2384,7 +2391,10 @@ QStringList QgsDxfExport::encodings()
 QString QgsDxfExport::layerName( QgsVectorLayer *vl ) const
 {
   Q_ASSERT( vl );
-  return mLayerTitleAsName && !vl->title().isEmpty() ? vl->title() : vl->name();
+  if ( mLayerTitleAsName && !vl->title().isEmpty() )
+    return vl->title();
+  else
+    return mLayerOverriddenName.value( vl->id(), vl->name() );
 }
 
 void QgsDxfExport::drawLabel( const QString &layerId, QgsRenderContext &context, pal::LabelPosition *label, const QgsPalLayerSettings &settings )
