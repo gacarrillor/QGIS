@@ -78,6 +78,7 @@ class QgsVectorLayerAndAttributeModel : public QgsLayerTreeModel
     QHash<const QgsVectorLayer *, int> mAttributeIdx;
     QHash<const QgsVectorLayer *, bool> mCreateDDBlockInfo;
     QHash<const QgsVectorLayer *, int>  mDDBlocksMaxNumberOfClasses;
+    QHash<const QgsVectorLayer *, QString> mOverriddenName;
     QSet<QModelIndex> mCheckedLeafs;
 
     void applyVisibility( QSet<QString> &visibleLayers, QgsLayerTreeNode *node );
