@@ -814,7 +814,8 @@ void QgsDxfExportDialog::cleanGroup( QgsLayerTreeNode *node )
   {
     if ( QgsLayerTree::isLayer( child ) &&
          ( QgsLayerTree::toLayer( child )->layer()->type() != Qgis::LayerType::Vector ||
-           ! QgsLayerTree::toLayer( child )->layer()->isSpatial() ) )
+           ! QgsLayerTree::toLayer( child )->layer()->isSpatial() ||
+           ! QgsLayerTree::toLayer( child )->layer()->isValid() ) )
     {
       toRemove << child;
       continue;
