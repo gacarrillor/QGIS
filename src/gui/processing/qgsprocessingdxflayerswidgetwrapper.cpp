@@ -54,14 +54,28 @@ QgsProcessingDxfLayerDetailsWidget::QgsProcessingDxfLayerDetailsWidget( const QV
 
   mOverriddenName->setText( layer.overriddenName() );
 
+  if ( mLayer->geometryType() == Qgis::GeometryType::Point )
+  {
+    // Data defined blocks are only available for point layers
+    mGroupBoxBlocks->setVisible( true );
+    mGroupBoxBlocks->setChecked( layer.buildDataDefinedBlocks() );
+    mSpinBoxBlocks->setValue( layer.dataDefinedBlocksMaximumNumberOfClasses() );
+  }
+  else
+  {
+    mGroupBoxBlocks->setVisible( false );
+  }
+
   connect( mFieldsComboBox, &QgsFieldComboBox::fieldChanged, this, &QgsPanelWidget::widgetChanged );
   connect( mOverriddenName, &QLineEdit::textChanged, this, &QgsPanelWidget::widgetChanged );
+  connect( mGroupBoxBlocks, &QGroupBox::toggled, this, &QgsPanelWidget::widgetChanged );
+  connect( mSpinBoxBlocks, &QSpinBox::textChanged, this, &QgsPanelWidget::widgetChanged );
 }
 
 QVariant QgsProcessingDxfLayerDetailsWidget::value() const
 {
   const int index = mLayer->fields().lookupField( mFieldsComboBox->currentField() );
-  const QgsDxfExport::DxfLayer layer( mLayer, index, false, -1, mOverriddenName->text().trimmed() );
+  const QgsDxfExport::DxfLayer layer( mLayer, index, mGroupBoxBlocks->isChecked(), mSpinBoxBlocks->value(), mOverriddenName->text().trimmed() );
   return QgsProcessingParameterDxfLayers::layerAsVariantMap( layer );
 }
 
@@ -108,6 +122,8 @@ QgsProcessingDxfLayersPanelWidget::QgsProcessingDxfLayersPanelWidget(
     vm["layer"] = layer->id();
     vm["attributeIndex"] = -1;
     vm["overriddenLayerName"] = QString();
+    vm["buildDataDefinedBlocks"] = false;
+    vm["dataDefinedBlocksMaximumNumberOfClasses"] = -1;
 
     const QString title = layer->name();
     addOption( vm, title, false );
