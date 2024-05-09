@@ -346,6 +346,7 @@ class TestQgsProfileSourceRegistry(QgisTestCase):
         elevation_range = canvas.visibleElevationRange()
         self.assertTrue(elevation_range.contains(429.3), f"Elevation 429.3 (min) not included in range ({elevation_range})")
         self.assertTrue(elevation_range.contains(1282.7), f"Elevation 1282.7 (max) not included in range ({elevation_range})")
+        canvas = None
         QgsApplication.profileSourceRegistry().unregisterProfileSource(source)
 
     def test_layout_item_profile_custom_source(self):
@@ -402,6 +403,7 @@ class TestQgsProfileSourceRegistry(QgisTestCase):
         self.assertTrue(
             self.render_layout_check('custom_profile', layout)
         )
+        layout = None
         QgsApplication.profileSourceRegistry().unregisterProfileSource(source)
 
 
