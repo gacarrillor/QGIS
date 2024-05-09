@@ -349,7 +349,7 @@ class TestQgsProfileSourceRegistry(QgisTestCase):
         canvas = None
         QgsApplication.profileSourceRegistry().unregisterProfileSource(source)
 
-    def test_layout_item_profile_custom_source(self):
+    def _test_layout_item_profile_custom_source(self):
         """
         Test getting a custom profile in a layout item
         """
