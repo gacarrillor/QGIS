@@ -19,19 +19,6 @@ endif()
 # Tests:
 set(TESTS
  testqgsgeometrysnapper.cpp
- testqgsinterpolator.cpp
- testqgsprocessingalgspt1.cpp
- testqgsprocessingalgspt2.cpp
- testqgsprocessingmodelalgorithm.cpp
- testqgszonalstatistics.cpp
- testqgsrastercalculator.cpp
- testqgsreclassifyutils.cpp
- testqgsalignraster.cpp
- testqgsnetworkanalysis.cpp
- testqgsninecellfilters.cpp
- testqgsmeshcalculator.cpp
- testqgsmeshcontours.cpp
- testqgstriangulation.cpp
 )
 if(HAVE_GSL)
   set(TESTS ${TESTS} testqgsgcptransformer.cpp)

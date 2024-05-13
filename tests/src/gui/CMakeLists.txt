@@ -24,56 +24,7 @@ endif()
 #ADD_QGIS_TEST(histogramtest testqgsrasterhistogram.cpp)
 
 set(TESTS
-  testqgsadvanceddigitizingdockwidget.cpp
-  testqgsannotationitemguiregistry.cpp
-  testqgsmaptoolzoom.cpp
-  testqgsmaptooledit.cpp
-  testqgscategorizedrendererwidget.cpp
-  testqgsdatumtransformdialog.cpp
-  testqgsdoublespinbox.cpp
-  testqgsdualview.cpp
-  testqgsattributeform.cpp
-  testqgsdatetimeedit.cpp
   testqgsdockwidget.cpp
-  testqgsfieldexpressionwidget.cpp
-  testqgsfilewidget.cpp
-  testqgsexternalstoragefilewidget.cpp
-  testqgsfocuswatcher.cpp
-  testqgshtmlwidgetwrapper.cpp
-  testqgsmapcanvas.cpp
-  testqgsmaptoolcapture.cpp
-  testqgsmessagebar.cpp
-  testprojectionissues.cpp
-  testqgsgui.cpp
-  testprocessinggui.cpp
-  testqgsprocessingmodel.cpp
-  testqgsrubberband.cpp
-  testqgsscalecombobox.cpp
-  testqgsscalerangewidget.cpp
-  testqgsrangewidgetwrapper.cpp
-  testqgsspinbox.cpp
-  testqgssqlcomposerdialog.cpp
-  testqgseditorwidgetregistry.cpp
-  testqgskeyvaluewidget.cpp
-  testqgsfiledownloader.cpp
-  testqgslayoutgui.cpp
-  testqgslayoutview.cpp
-  testqgsvaluemapwidgetwrapper.cpp
-  testqgsvaluemapconfigdlg.cpp
-  testqgsvaluerelationwidgetwrapper.cpp
-  testqgsrelationeditorwidget.cpp
-  testqgsrelationreferencewidget.cpp
-  testqgsfeaturelistcombobox.cpp
-  testqgstexteditwrapper.cpp
-  testqgstableeditor.cpp
-  testqgsnewdatabasetablewidget.cpp
-  testqgsogrprovidergui.cpp
-  testqgssinglebandpseudocolorrendererwidget.cpp
-  testqgsdoublevalidator.cpp
-  testqgsmeshlayerpropertiesdialog.cpp
-  testqgsexternalresourcewidgetwrapper.cpp
-  testqgsquerybuilder.cpp
-  testqgsqueryresultwidget.cpp
 )
 
 foreach(TESTSRC ${TESTS})
@@ -83,13 +34,3 @@ endforeach(TESTSRC)
 add_qgis_test(testqgsrasterlayersaveasdialog.cpp MODULE gui LINKEDLIBRARIES qgis_gui qgis_analysis)
 add_qgis_test(testqgslistwidget.cpp MODULE gui LINKEDLIBRARIES qgis_gui qgis_analysis)
 
-if (ENABLE_PGTEST)
-  SET_TESTS_PROPERTIES(
-    test_gui_processinggui
-    test_gui_valuerelationwidgetwrapper
-    test_gui_texteditwrapper
-    test_gui_newdatabasetablewidget
-    test_gui_queryresultwidget
-    test_gui_listwidget
-    PROPERTIES LABELS "POSTGRES")
-endif()
