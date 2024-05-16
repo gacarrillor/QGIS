@@ -432,13 +432,8 @@ jobs:
           name: test-results-qt${{ matrix.qt-version }}
           path: qgis_test_report
 
-  tmate:
-    runs-on: ubuntu-latest
-    needs: run-tests
-    steps:
-      - uses: actions/checkout@v3
       - name: Setup tmate session
-        uses: mkuhn/action-tmate@patch-1
+        uses: m-kuhn/action-tmate@patch-1
         if: always()
 
 #  clang-tidy:
