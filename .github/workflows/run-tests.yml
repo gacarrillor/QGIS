@@ -434,13 +434,12 @@ jobs:
 
   tmate:
     runs-on: ubuntu-latest
-    needs: build
+    needs: run-tests
     steps:
       - uses: actions/checkout@v3
       - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          sudo: false
+        uses: mkuhn/action-tmate@patch-1
+        if: always()
 
 #  clang-tidy:
 #    if: github.event_name == 'pull_request'
