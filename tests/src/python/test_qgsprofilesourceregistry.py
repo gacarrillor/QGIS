@@ -108,8 +108,8 @@ class MyProfileResults(QgsAbstractProfileResults):
         if not painter:
             return
 
-        painter.setBrush(Qt.NoBrush)
-        painter.setPen(Qt.NoPen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(Qt.PenStyle.NoPen)
 
         minDistance = context.distanceRange().lower()
         maxDistance = context.distanceRange().upper()
@@ -196,7 +196,7 @@ class MyProfileSource(QgsAbstractProfileSource):
 
 class TestQgsProfileSourceRegistry(QgisTestCase):
 
-    def _test_register_unregister_source(self):
+    def test_register_unregister_source(self):
         initial_sources = QgsApplication.profileSourceRegistry().profileSources()
 
         source = MyProfileSource()
@@ -212,7 +212,7 @@ class TestQgsProfileSourceRegistry(QgisTestCase):
             initial_sources
         )
 
-    def _test_generate_profile_from_custom_source(self):
+    def test_generate_profile_from_custom_source(self):
         curve = QgsLineString()
         curve.fromWkt("LINESTRING (2584085.816 1216473.232, 2579969.567 1218027.326, 2576819.377 1220589.481)")
         req = QgsProfileRequest(curve)
@@ -244,7 +244,7 @@ class TestQgsProfileSourceRegistry(QgisTestCase):
             self.assertIn(d, results.distance_to_height)
             self.assertEqual(feature.attributes["elevation"], results.distance_to_height[d])
 
-    def _test_export_3d_from_custom_source(self):
+    def test_export_3d_from_custom_source(self):
         source = MyProfileSource()
         curve = QgsLineString()
         curve.fromWkt("LINESTRING (2584085.816 1216473.232, 2579969.567 1218027.326, 2576819.377 1220589.481)")
@@ -265,7 +265,7 @@ class TestQgsProfileSourceRegistry(QgisTestCase):
             z = feature.geometry().constGet().z()
             self.assertEqual(z, expected_z[i])
 
-    def _test_export_2d_from_custom_source(self):
+    def test_export_2d_from_custom_source(self):
         source = MyProfileSource()
         curve = QgsLineString()
         curve.fromWkt("LINESTRING (2584085.816 1216473.232, 2579969.567 1218027.326, 2576819.377 1220589.481)")
@@ -293,7 +293,7 @@ class TestQgsProfileSourceRegistry(QgisTestCase):
             z = geom.y()
             self.assertEqual(z, expected_values[d])
 
-    def _test_export_distance_elevation_from_custom_source(self):
+    def test_export_distance_elevation_from_custom_source(self):
         source = MyProfileSource()
         curve = QgsLineString()
         curve.fromWkt("LINESTRING (2584085.816 1216473.232, 2579969.567 1218027.326, 2576819.377 1220589.481)")
@@ -324,7 +324,7 @@ class TestQgsProfileSourceRegistry(QgisTestCase):
             self.assertIn(feature["distance"], expected_values)
             self.assertEqual(expected_values[feature["distance"]], feature["elevation"])
 
-    def _test_profile_canvas_custom_source(self):
+    def test_profile_canvas_custom_source(self):
         canvas = QgsElevationProfileCanvas()
         canvas.setProject(QgsProject.instance())
         canvas.setCrs(QgsCoordinateReferenceSystem("EPSG:2056"))
@@ -403,7 +403,6 @@ class TestQgsProfileSourceRegistry(QgisTestCase):
         self.assertTrue(
             self.render_layout_check('custom_profile', layout)
         )
-        layout = None
         QgsApplication.profileSourceRegistry().unregisterProfileSource(source)
 
 

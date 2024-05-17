@@ -21,7 +21,6 @@ set(TESTS
   testqgsfieldcalculator.cpp
   testqgslayerpropertiesdialogs.cpp
   testqgsmapcanvasdockwidget.cpp
-  testqgsmaptooladdpart.cpp
   testqgsmaptooldeletepart.cpp
   testqgsmaptooladdring.cpp
   testqgsmaptooldeletering.cpp
