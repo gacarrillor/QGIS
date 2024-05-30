@@ -566,6 +566,7 @@ set(QGIS_GUI_SRCS
   qgsdockwidget.cpp
   qgsencodingfiledialog.cpp
   qgserrordialog.cpp
+  qgsexpressionaddfunctionfiledialog.cpp
   qgsexpressionbuilderdialog.cpp
   qgsexpressionbuilderwidget.cpp
   qgsexpressionfinder.cpp
@@ -839,6 +840,7 @@ set(QGIS_GUI_HDRS
   qgsdoublevalidator.h
   qgsencodingfiledialog.h
   qgserrordialog.h
+  qgsexpressionaddfunctionfiledialog.h
   qgsexpressionbuilderdialog.h
   qgsexpressionstoredialog.h
   qgsexpressionbuilderwidget.h
