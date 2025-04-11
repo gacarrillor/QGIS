@@ -1608,6 +1608,11 @@ void QgsAttributesFormProperties::copyWidgetConfiguration()
   duplicatePolicyElement.setAttribute( QStringLiteral( "policy" ), qgsEnumValueToKey( field.duplicatePolicy() ) );
   documentElement.appendChild( duplicatePolicyElement );
 
+  // Merge policy
+  QDomElement mergePolicyElement = doc.createElement( QStringLiteral( "mergePolicy" ) );
+  mergePolicyElement.setAttribute( QStringLiteral( "policy" ), qgsEnumValueToKey( field.mergePolicy() ) );
+  documentElement.appendChild( mergePolicyElement );
+
   // Default expressions
   QDomElement defaultElem = doc.createElement( QStringLiteral( "default" ) );
   defaultElem.setAttribute( QStringLiteral( "expression" ), field.defaultValueDefinition().expression() );
@@ -1754,6 +1759,14 @@ void QgsAttributesFormProperties::pasteWidgetConfiguration()
     {
       const Qgis::FieldDuplicatePolicy policy = qgsEnumKeyToValue( duplicatePolicyElement.attribute( QStringLiteral( "policy" ) ), Qgis::FieldDuplicatePolicy::Duplicate );
       config.mDuplicatePolicy = policy;
+    }
+
+    // Merge policy
+    const QDomElement mergePolicyElement = docElem.firstChildElement( QStringLiteral( "mergePolicy" ) );
+    if ( !mergePolicyElement.isNull() )
+    {
+      const Qgis::FieldDomainMergePolicy policy = qgsEnumKeyToValue( mergePolicyElement.attribute( QStringLiteral( "policy" ) ), Qgis::FieldDomainMergePolicy::DefaultValue );
+      config.mMergePolicy = policy;
     }
 
     // Default expressions
