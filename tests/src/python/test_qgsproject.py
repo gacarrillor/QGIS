@@ -2137,7 +2137,7 @@ class TestQgsProject(QgisTestCase):
         project = QgsProject()
 
         l0 = QgsVectorLayer(os.path.join(tmpDir.path(), "points.shp"), "points", "ogr")
-        #l0.extent()
+        # l0.extent()
         self.assertTrue(l0.isValid())
         self.assertTrue(project.addMapLayers([l0]))
         self.assertTrue(project.write(tmpFile))
@@ -2145,17 +2145,12 @@ class TestQgsProject(QgisTestCase):
         del project
 
         # Read the project.qgs as XML using etree and check that the maplayer extent is in the XML file
-        with open(tmpFile, "r") as f:
+        with open(tmpFile) as f:
             xml = f.read()
             root = et.XML(xml)
-            layerXML = root.findall('.//projectlayers/maplayer')[0]
-            extentXML = layerXML.findall('.//extent')[0]
+            layerXML = root.findall(".//projectlayers/maplayer")[0]
+            extentXML = layerXML.findall(".//extent")[0]
             self.assertNotEqual(len(extentXML.getchildren()), 0)
-
-
-
-
-
 
 
 if __name__ == "__main__":
