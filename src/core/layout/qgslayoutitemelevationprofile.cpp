@@ -688,6 +688,7 @@ void QgsLayoutItemElevationProfile::paint( QPainter *painter, const QStyleOption
           if ( QgsAbstractProfileSource *source = layer->profileSource() )
             sources.append( source );
         }
+        std::reverse( sources.begin(), sources.end() ); // sources are rendered from bottom to top
 
         QgsProfilePlotRenderer renderer( sources, profileRequest() );
         std::unique_ptr<QgsLineSymbol> rendererSubSectionsSymbol( subsectionsSymbol() ? subsectionsSymbol()->clone() : nullptr );
@@ -743,6 +744,7 @@ void QgsLayoutItemElevationProfile::paint( QPainter *painter, const QStyleOption
           if ( QgsAbstractProfileSource *source = layer->profileSource() )
             sources.append( source );
         }
+        std::reverse( sources.begin(), sources.end() ); // sources are rendered from bottom to top
 
         QgsProfilePlotRenderer renderer( sources, profileRequest() );
         std::unique_ptr<QgsLineSymbol> rendererSubSectionsSymbol( subsectionsSymbol() ? subsectionsSymbol()->clone() : nullptr );
@@ -1000,6 +1002,7 @@ void QgsLayoutItemElevationProfile::recreateCachedImageInBackground()
     if ( QgsAbstractProfileSource *source = layer->profileSource() )
       sources.append( source );
   }
+  std::reverse( sources.begin(), sources.end() ); // sources are rendered from bottom to top
 
   mRenderJob = std::make_unique< QgsProfilePlotRenderer >( sources, profileRequest() );
   std::unique_ptr<QgsLineSymbol> rendererSubSectionsSymbol( subsectionsSymbol() ? subsectionsSymbol()->clone() : nullptr );

@@ -637,7 +637,6 @@ void QgsElevationProfileWidget::updateCanvasLayers()
       layers << layer;
   }
 
-  std::reverse( layers.begin(), layers.end() );
   mCanvas->setLayers( layers );
   scheduleUpdate();
 }
