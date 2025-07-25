@@ -657,8 +657,6 @@ void QgsLayoutElevationProfileWidget::copySettingsFromProfileCanvas( QgsElevatio
   }
 
   QList<QgsMapLayer *> canvasLayers = canvas->layers();
-  // canvas layers are in opposite direction to what the layout item requires
-  std::reverse( canvasLayers.begin(), canvasLayers.end() );
   mProfile->setLayers( canvasLayers );
   const QList<QgsLayerTreeLayer *> layers = mLayerTree->findLayers();
   for ( QgsLayerTreeLayer *layer : layers )

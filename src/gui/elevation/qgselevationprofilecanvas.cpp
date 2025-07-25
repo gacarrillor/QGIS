@@ -889,6 +889,7 @@ void QgsElevationProfileCanvas::refresh()
     if ( QgsAbstractProfileSource *source = layer->profileSource() )
       sources.append( source );
   }
+  std::reverse( sources.begin(), sources.end() ); // sources are rendered from bottom to top
 
   mCurrentJob = new QgsProfilePlotRenderer( sources, request );
   connect( mCurrentJob, &QgsProfilePlotRenderer::generationFinished, this, &QgsElevationProfileCanvas::generationFinished );
