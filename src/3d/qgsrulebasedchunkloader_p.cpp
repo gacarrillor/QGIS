@@ -25,15 +25,17 @@
 #include "qgspoint3dsymbol.h"
 #include "qgspolygon3dsymbol.h"
 #include "qgsrulebased3drenderer.h"
-#include "qgstessellatedpolygongeometry.h"
 #include "qgsvectorlayer.h"
 #include "qgsvectorlayerchunkloader_p.h"
 #include "qgsvectorlayerfeatureiterator.h"
 
+#include <QString>
 #include <Qt3DCore/QTransform>
-#include <QtConcurrent>
+#include <QtConcurrentRun>
 
 #include "moc_qgsrulebasedchunkloader_p.cpp"
+
+using namespace Qt::StringLiterals;
 
 ///@cond PRIVATE
 

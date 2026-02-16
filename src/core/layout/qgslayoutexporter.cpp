@@ -27,7 +27,6 @@
 #include "qgslinestring.h"
 #include "qgsmessagelog.h"
 #include "qgsogrutils.h"
-#include "qgspaintenginehack.h"
 #include "qgsprojectstylesettings.h"
 #include "qgssettingsentryimpl.h"
 #include "qgssettingstree.h"
@@ -35,9 +34,12 @@
 #include <QBuffer>
 #include <QImageWriter>
 #include <QSize>
+#include <QString>
 #include <QSvgGenerator>
 #include <QTextStream>
 #include <QTimeZone>
+
+using namespace Qt::StringLiterals;
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
 #include <QColorSpace>
@@ -582,8 +584,6 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::exportToPdf( const QString &f
   // as QPrinter does not support composition modes and can result
   // in items missing from the output
 
-  // weird clang-tidy false positive!
-  // NOLINTBEGIN(bugprone-branch-clone)
   if ( settings.forceVectorOutput )
   {
     mLayout->renderContext().setRasterizedRenderingPolicy( Qgis::RasterizedRenderingPolicy::ForceVector );
@@ -592,14 +592,17 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::exportToPdf( const QString &f
   {
     mLayout->renderContext().setRasterizedRenderingPolicy( Qgis::RasterizedRenderingPolicy::PreferVector );
   }
-  // NOLINTEND(bugprone-branch-clone)
 
   // Force synchronous legend graphics requests. Necessary for WMS GetPrint,
   // as otherwise processing the request ends before remote graphics are downloaded.
   mLayout->renderContext().setFlag( Qgis::LayoutRenderFlag::SynchronousLegendGraphics, true );
 
   mLayout->renderContext().setTextRenderFormat( settings.textRenderFormat );
-  mLayout->renderContext().setExportThemes( settings.exportThemes );
+
+  if ( settings.writeGeoPdf && !settings.useLayerTreeConfig )
+  {
+    mLayout->renderContext().setExportThemes( settings.exportThemes );
+  }
 
   ExportResult result = Success;
   if ( settings.writeGeoPdf || settings.exportLayersAsSeperateFiles )  //#spellok
@@ -612,6 +615,19 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::exportToPdf( const QString &f
     subSettings.exportLayersAsSeperateFiles = false;  //#spellok
 
     const QList<QGraphicsItem *> items = mLayout->items( Qt::AscendingOrder );
+
+    if ( settings.writeGeoPdf && settings.useLayerTreeConfig )
+    {
+      bool res = geospatialPdfExporter->setMapItemLayersBeforeRendering();
+      // If no map was found to set project layers, it means that all of them
+      // have map theme presets or have locked layers, which is not supported
+      // when exporting a Geospatial PDF following QGIS layer tree properties.
+      if ( !res )
+      {
+        mErrorMessage = u"The Geospatial PDF cannot be exported following QGIS project configuration: At least one map layout item must not follow map themes nor locked layers."_s;
+        return PrintError;
+      }
+    }
 
     QList< QgsLayoutGeospatialPdfExporter::ComponentLayerDetail > pdfComponents;
 
@@ -656,6 +672,12 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::exportToPdf( const QString &f
       return item->customProperty( u"pdfExportGroup"_s ).toString();
     };
     result = handleLayeredExport( items, exportFunc, getExportGroupNameFunc );
+
+    if ( settings.writeGeoPdf && settings.useLayerTreeConfig )
+    {
+      // Restore map item layers right after the layer rendering
+      geospatialPdfExporter->restoreMapItemLayersAfterRendering();
+    }
     if ( result != Success )
       return result;
 
@@ -667,7 +689,6 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::exportToPdf( const QString &f
       QgsLayoutSize pageSize = mLayout->pageCollection()->page( 0 )->sizeWithUnits();
       QgsLayoutSize pageSizeMM = mLayout->renderContext().measurementConverter().convert( pageSize, Qgis::LayoutUnit::Millimeters );
       details.pageSizeMm = pageSizeMM.toQSizeF();
-      details.mutuallyExclusiveGroups = mutuallyExclusiveGroups;
 
       if ( settings.exportMetadata )
       {
@@ -679,12 +700,6 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::exportToPdf( const QString &f
         details.subject = mLayout->project()->metadata().abstract();
         details.title = mLayout->project()->metadata().title();
         details.keywords = mLayout->project()->metadata().keywords();
-      }
-
-      const QList< QgsMapLayer * > layers = mLayout->project()->mapLayers().values();
-      for ( const QgsMapLayer *layer : layers )
-      {
-        details.layerIdToPdfLayerTreeNameMap.insert( layer->id(), layer->name() );
       }
 
       if ( settings.appendGeoreference )
@@ -727,12 +742,23 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::exportToPdf( const QString &f
         }
       }
 
-      details.customLayerTreeGroups = geospatialPdfExporter->customLayerTreeGroups();
-      details.initialLayerVisibility = geospatialPdfExporter->initialLayerVisibility();
-      details.layerOrder = geospatialPdfExporter->layerOrder();
-      details.layerTreeGroupOrder = geospatialPdfExporter->layerTreeGroupOrder();
+      if ( !settings.useLayerTreeConfig )
+      {
+        details.customLayerTreeGroups = geospatialPdfExporter->customLayerTreeGroups();
+        details.initialLayerVisibility = geospatialPdfExporter->initialLayerVisibility();
+        details.layerOrder = geospatialPdfExporter->layerOrder();
+        details.layerTreeGroupOrder = geospatialPdfExporter->layerTreeGroupOrder();
+        details.mutuallyExclusiveGroups = mutuallyExclusiveGroups;
+
+        const QList< QgsMapLayer * > layers = mLayout->project()->mapLayers().values();
+        for ( const QgsMapLayer *layer : layers )
+        {
+          details.layerIdToPdfLayerTreeNameMap.insert( layer->id(), layer->name() );
+        }
+      }
       details.includeFeatures = settings.includeGeoPdfFeatures;
       details.useIso32000ExtensionFormatGeoreferencing = settings.useIso32000ExtensionFormatGeoreferencing;
+      details.useLayerTreeConfig = settings.useLayerTreeConfig;
 
       if ( !geospatialPdfExporter->finalize( pdfComponents, filePath, details ) )
       {
@@ -1065,8 +1091,6 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::exportToSvg( const QString &f
   mLayout->renderContext().setDpi( settings.dpi );
 
   mLayout->renderContext().setFlags( settings.flags );
-  // weird clang-tidy false positive!
-  // NOLINTBEGIN(bugprone-branch-clone)
   if ( settings.forceVectorOutput )
   {
     mLayout->renderContext().setRasterizedRenderingPolicy( Qgis::RasterizedRenderingPolicy::ForceVector );
@@ -1075,7 +1099,6 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::exportToSvg( const QString &f
   {
     mLayout->renderContext().setRasterizedRenderingPolicy( Qgis::RasterizedRenderingPolicy::PreferVector );
   }
-  // NOLINTEND(bugprone-branch-clone)
 
   mLayout->renderContext().setTextRenderFormat( s.textRenderFormat );
   mLayout->renderContext().setPredefinedScales( settings.predefinedMapScales );
@@ -1364,12 +1387,6 @@ void QgsLayoutExporter::preparePrintAsPdf( QgsLayout *layout, QPdfWriter *device
   // TODO: add option for this in layout
   // May not work on Windows or non-X11 Linux. Works fine on Mac using QPrinter::NativeFormat
   //printer.setFontEmbeddingEnabled( true );
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
-  // paint engine hack not required, fixed upstream
-#else
-  QgsPaintEngineHack::fixEngineFlags( static_cast<QPaintDevice *>( device )->paintEngine() );
-#endif
 }
 
 void QgsLayoutExporter::preparePrint( QgsLayout *layout, QPagedPaintDevice *device, bool setFirstPageSize )

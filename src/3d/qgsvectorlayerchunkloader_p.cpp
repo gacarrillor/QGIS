@@ -37,10 +37,14 @@
 #include "qgsvectorlayer.h"
 #include "qgsvectorlayerfeatureiterator.h"
 
+#include <QString>
 #include <Qt3DCore/QTransform>
-#include <QtConcurrent>
+#include <Qt3DRender/QGeometryRenderer>
+#include <QtConcurrentRun>
 
 #include "moc_qgsvectorlayerchunkloader_p.cpp"
+
+using namespace Qt::StringLiterals;
 
 ///@cond PRIVATE
 

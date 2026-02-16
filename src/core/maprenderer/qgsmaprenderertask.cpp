@@ -35,10 +35,13 @@
 #include <QFile>
 #include <QImageWriter>
 #include <QPdfWriter>
+#include <QString>
 #include <QTextStream>
 #include <QTimeZone>
 
 #include "moc_qgsmaprenderertask.cpp"
+
+using namespace Qt::StringLiterals;
 
 ///@cond PRIVATE
 
@@ -70,6 +73,8 @@ class QgsMapRendererTaskGeospatialPdfExporter : public QgsAbstractGeospatialPdfE
     {
       return mLayerDetails.value( layerId );
     }
+
+    QgsLayerTree *layerTree() const override { return nullptr; }
 
     QMap< QString, VectorComponentDetail > mLayerDetails;
 };

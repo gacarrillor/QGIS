@@ -129,6 +129,7 @@
 %Include auto_generated/qgsmaskrendersettings.sip
 %Include auto_generated/qgsmathutils.sip
 %Include auto_generated/qgsmatrix4x4.sip
+%Include auto_generated/qgsmeasureutils.sip
 %Include auto_generated/qgsmessagelog.sip
 %Include auto_generated/qgsmessageoutput.sip
 %Include auto_generated/qgsmimedatautils.sip
@@ -536,6 +537,7 @@
 %Include auto_generated/pointcloud/qgspointcloudlayer.sip
 %Include auto_generated/pointcloud/qgspointcloudlayerelevationproperties.sip
 %Include auto_generated/pointcloud/qgspointcloudindex.sip
+%Include auto_generated/pointcloud/qgspointcloudsubindex.sip
 %Include auto_generated/pointcloud/qgspointclouddataprovider.sip
 %Include auto_generated/pointcloud/qgspointcloudrenderer.sip
 %Include auto_generated/pointcloud/qgspointcloudrendererregistry.sip
@@ -619,6 +621,8 @@
 %Include auto_generated/project/qgsprojectfiletransform.sip
 %Include auto_generated/project/qgsprojectgpssettings.sip
 %Include auto_generated/project/qgsprojectproperty.sip
+%Include auto_generated/project/qgsselectivemaskingsourcesetmanager.sip
+%Include auto_generated/project/qgsselectivemaskingsourcesetmanagermodel.sip
 %Include auto_generated/project/qgsprojectservervalidator.sip
 %Include auto_generated/project/qgsprojectstorage.sip
 %Include auto_generated/project/qgsprojectstorageregistry.sip
@@ -755,6 +759,8 @@
 %Include auto_generated/symbology/qgsrendererrange.sip
 %Include auto_generated/symbology/qgsrendererregistry.sip
 %Include auto_generated/symbology/qgsrulebasedrenderer.sip
+%Include auto_generated/symbology/qgsselectivemaskingsource.sip
+%Include auto_generated/symbology/qgsselectivemaskingsourceset.sip
 %Include auto_generated/symbology/qgssinglesymbolrenderer.sip
 %Include auto_generated/symbology/qgsstyle.sip
 %Include auto_generated/symbology/qgsstyleentityvisitor.sip

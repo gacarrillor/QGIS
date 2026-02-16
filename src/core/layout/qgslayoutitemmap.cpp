@@ -49,10 +49,13 @@
 #include <QApplication>
 #include <QPainter>
 #include <QScreen>
+#include <QString>
 #include <QStyleOptionGraphicsItem>
 #include <QTimer>
 
 #include "moc_qgslayoutitemmap.cpp"
+
+using namespace Qt::StringLiterals;
 
 const QgsSettingsEntryBool *QgsLayoutItemMap::settingForceRasterMasks = new QgsSettingsEntryBool( u"force-raster-masks"_s, QgsSettingsTree::sTreeLayout, false, u"Whether to force rasterized clipping masks, regardless of output format."_s );
 
@@ -393,6 +396,9 @@ void QgsLayoutItemMap::setLayers( const QList<QgsMapLayer *> &layers )
       else
       {
         std::unique_ptr<QgsGroupLayer> groupLayerClone { groupLayer->clone() };
+        // It is important to preserve the original groupLayer id.
+        // E.g., to identify rendered files (by id) in Geospatial PDF exports.
+        groupLayerClone->setId( groupLayer->id() );
         mGroupLayers[ groupLayer->id() ] = std::move( groupLayerClone );
         *it = mGroupLayers[ groupLayer->id() ].get();
       }

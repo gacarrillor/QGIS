@@ -59,10 +59,13 @@
 #include <QActionGroup>
 #include <QProgressBar>
 #include <QShortcut>
+#include <QString>
 #include <QToolBar>
 #include <QWidget>
 
 #include "moc_qgs3dmapcanvaswidget.cpp"
+
+using namespace Qt::StringLiterals;
 
 const QgsSettingsEntryDouble *Qgs3DMapCanvasWidget::settingClippingTolerance = new QgsSettingsEntryDouble( u"tolerance"_s, QgsSettingsTree::sTree3DMap, 100, u"Tolerance distance for 3D Map cross section"_s, Qgis::SettingsOptions(), 0 );
 const QgsSettingsEntryBool *Qgs3DMapCanvasWidget::settingCrossSectionToleranceLocked = new QgsSettingsEntryBool( u"cross-section-tolerance-locked"_s, QgsSettingsTree::sTree3DMap, true, u"Whether cross section tolerance is locked"_s );
@@ -96,7 +99,17 @@ Qgs3DMapCanvasWidget::Qgs3DMapCanvasWidget( const QString &name, bool isDocked )
   mActionToggleEditing = new QAction( QgsApplication::getThemeIcon( u"/mActionToggleEditing.svg"_s ), tr( "Toggle editing" ), this );
   mActionToggleEditing->setCheckable( true );
   connect( mActionToggleEditing, &QAction::triggered, this, [this] {
-    QgisApp::instance()->toggleEditing( QgisApp::instance()->activeLayer() );
+    QgsMapLayer *layer = QgisApp::instance()->activeLayer();
+    QgsPointCloudLayer *pcLayer = qobject_cast<QgsPointCloudLayer *>( layer );
+    for ( QgsPointCloudSubIndex &subIndex : pcLayer->subIndexes() )
+    {
+      if ( !subIndex.index() || !subIndex.index().isValid() )
+      {
+        mMessageBar->pushMessage( tr( "Virtual Point Cloud editing" ), tr( "Some of the files referenced by the VPC have not yet been loaded, selection of areas of a not yet loaded dataset will not cause any changes to its data. Only actually selected points will be edited." ) );
+        break;
+      }
+    }
+    QgisApp::instance()->toggleEditing( pcLayer );
     mCanvas->setMapTool( nullptr );
   } );
   mActionUndo = new QAction( QgsApplication::getThemeIcon( u"/mActionUndo.svg"_s ), tr( "Undo" ), this );
@@ -257,6 +270,13 @@ Qgs3DMapCanvasWidget::Qgs3DMapCanvasWidget( const QString &name, bool isDocked )
     mCanvas->mapSettings()->setViewFrustumVisualizationEnabled( enabled );
   } );
   mCameraMenu->addAction( mShowFrustumPolygon );
+
+  mActionShow2DMapOverlay = new QAction( tr( "Show 2D Map Overlay" ), this );
+  mActionShow2DMapOverlay->setCheckable( true );
+  connect( mActionShow2DMapOverlay, &QAction::triggered, this, [this]( bool enabled ) {
+    mCanvas->mapSettings()->setIs2DMapOverlayEnabled( enabled );
+  } );
+  mCameraMenu->addAction( mActionShow2DMapOverlay );
 
   mActionSetSceneExtent = mCameraMenu->addAction( QgsApplication::getThemeIcon( u"extents.svg"_s ), tr( "Set 3D Scene Extent on 2D Map View" ), this, &Qgs3DMapCanvasWidget::setSceneExtentOn2DCanvas );
   mActionSetSceneExtent->setCheckable( true );
@@ -869,7 +889,7 @@ void Qgs3DMapCanvasWidget::configure()
 
 void Qgs3DMapCanvasWidget::exportScene()
 {
-  QDialog dlg;
+  QDialog dlg( this );
   dlg.setWindowTitle( tr( "Export 3D Scene" ) );
   dlg.setObjectName( u"3DSceneExportDialog"_s );
   QgsGui::enableAutoGeometryRestore( &dlg );
@@ -1359,6 +1379,7 @@ void Qgs3DMapCanvasWidget::updateCheckedActionsFromMapSettings( const Qgs3DMapSe
   whileBlocking( mActionSync2DNavTo3D )->setChecked( mapSettings->viewSyncMode().testFlag( Qgis::ViewSyncModeFlag::Sync2DTo3D ) );
   whileBlocking( mActionSync3DNavTo2D )->setChecked( mapSettings->viewSyncMode().testFlag( Qgis::ViewSyncModeFlag::Sync3DTo2D ) );
   whileBlocking( mShowFrustumPolygon )->setChecked( mapSettings->viewFrustumVisualizationEnabled() );
+  whileBlocking( mActionShow2DMapOverlay )->setChecked( mapSettings->is2DMapOverlayEnabled() );
 }
 
 //

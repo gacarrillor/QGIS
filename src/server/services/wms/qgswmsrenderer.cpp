@@ -65,6 +65,7 @@
 #include "qgsrasterrenderer.h"
 #include "qgsrenderer.h"
 #include "qgsscalecalculator.h"
+#include "qgsselectivemaskingsourcesetmanager.h"
 #include "qgsserverapiutils.h"
 #include "qgsserverexception.h"
 #include "qgsserverfeatureid.h"
@@ -82,10 +83,13 @@
 #include <QDir>
 #include <QImage>
 #include <QPainter>
+#include <QString>
 #include <QStringList>
 #include <QTemporaryFile>
 #include <QUrl>
 #include <QXmlStreamReader>
+
+using namespace Qt::StringLiterals;
 
 //for printing
 #include "qgslayoutatlas.h"
@@ -1482,6 +1486,8 @@ namespace QgsWms
 
     // add labeling engine settings
     mapSettings.setLabelingEngineSettings( mProject->labelingEngineSettings() );
+
+    mapSettings.setSelectiveMaskingSourceSets( mProject->selectiveMaskingSourceSetManager()->sets() );
 
     mapSettings.setScaleMethod( mProject->scaleMethod() );
 
@@ -3722,13 +3728,6 @@ namespace QgsWms
           // OGC filter
           QDomDocument filterXml;
 
-#if QT_VERSION < QT_VERSION_CHECK( 6, 5, 0 )
-          QString errorMsg;
-          if ( !filterXml.setContent( filter.mFilter, true, &errorMsg ) )
-          {
-            throw QgsBadRequestException( QgsServiceException::QGIS_InvalidParameterValue, u"Filter string rejected. Error message: %1. The XML string was: %2"_s.arg( errorMsg, filter.mFilter ) );
-          }
-#else
           QXmlStreamReader xmlReader( filter.mFilter );
           xmlReader.addExtraNamespaceDeclaration( QXmlStreamNamespaceDeclaration( u"fes"_s, u"http://www.opengis.net/fes/2.0"_s ) );
           xmlReader.addExtraNamespaceDeclaration( QXmlStreamNamespaceDeclaration( u"ogc"_s, u"http://www.opengis.net/ogc"_s ) );
@@ -3736,7 +3735,7 @@ namespace QgsWms
           {
             throw QgsBadRequestException( QgsServiceException::QGIS_InvalidParameterValue, u"Filter string rejected. Error %1:%2 : %3. The XML string was: %4"_s.arg( QString::number( result.errorLine ), QString::number( result.errorColumn ), result.errorMessage, filter.mFilter ) );
           }
-#endif
+
           QDomElement filterElem = filterXml.firstChildElement();
           std::unique_ptr<QgsExpression> filterExp( QgsOgcUtils::expressionFromOgcFilter( filterElem, filter.mVersion, filteredLayer ) );
 

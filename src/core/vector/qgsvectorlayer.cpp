@@ -117,6 +117,8 @@
 
 #include "moc_qgsvectorlayer.cpp"
 
+using namespace Qt::StringLiterals;
+
 const QgsSettingsEntryDouble *QgsVectorLayer::settingsSimplifyDrawingTol = new QgsSettingsEntryDouble( u"simplifyDrawingTol"_s, QgsSettingsTree::sTreeQgis, Qgis::DEFAULT_MAPTOPIXEL_THRESHOLD );
 const QgsSettingsEntryBool *QgsVectorLayer::settingsSimplifyLocal = new QgsSettingsEntryBool( u"simplifyLocal"_s, QgsSettingsTree::sTreeQgis, true );
 const QgsSettingsEntryDouble *QgsVectorLayer::settingsSimplifyMaxScale = new QgsSettingsEntryDouble( u"simplifyMaxScale"_s, QgsSettingsTree::sTreeQgis, 1.0 );
@@ -6019,7 +6021,7 @@ QString QgsVectorLayer::htmlMetadata() const
     }
 
     // geom column name
-    if ( const QgsVectorDataProvider *provider = dataProvider(); !provider->geometryColumnName().isEmpty() )
+    if ( const QgsVectorDataProvider *provider = dataProvider(); provider && !provider->geometryColumnName().isEmpty() )
     {
       myMetadata += u"<tr><td class=\"highlight\">"_s + tr( "Geometry column" ) + u"</td><td>"_s + provider->geometryColumnName() + u"</td></tr>\n"_s;
     }
