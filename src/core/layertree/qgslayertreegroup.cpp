@@ -21,9 +21,12 @@
 #include "qgsmaplayer.h"
 
 #include <QDomElement>
+#include <QString>
 #include <QStringList>
 
 #include "moc_qgslayertreegroup.cpp"
+
+using namespace Qt::StringLiterals;
 
 QgsLayerTreeGroup::QgsLayerTreeGroup( const QString &name, bool checked )
   : QgsLayerTreeNode( NodeGroup, checked )
@@ -224,13 +227,22 @@ void QgsLayerTreeGroup::removeLayer( QgsMapLayer *layer )
   updateGroupLayers();
 }
 
-void QgsLayerTreeGroup::removeCustomNode( const QString &id )
+void QgsLayerTreeGroup::removeCustomNode( QgsLayerTreeCustomNode *customNode )
 {
-  QgsLayerTreeCustomNode *node = findCustomNode( id );
-  if ( node )
+  for ( QgsLayerTreeNode *child : std::as_const( mChildren ) )
   {
-    removeChildNode( node );
+    if ( QgsLayerTree::isCustomNode( child ) )
+    {
+      QgsLayerTreeCustomNode *childCustom = QgsLayerTree::toCustomNode( child );
+      if ( childCustom->nodeId() == customNode->nodeId() )
+      {
+        removeChildren( mChildren.indexOf( child ), 1 );
+        break;
+      }
+    }
   }
+
+  updateGroupLayers();
 }
 
 void QgsLayerTreeGroup::removeChildren( int from, int count )

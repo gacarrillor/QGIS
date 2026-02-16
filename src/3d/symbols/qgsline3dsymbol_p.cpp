@@ -15,10 +15,11 @@
 
 #include "qgsline3dsymbol_p.h"
 
-#include "qgs3dmapsettings.h"
 #include "qgs3dutils.h"
+#include "qgsfeature3dhandler_p.h"
 #include "qgsgeos.h"
 #include "qgsgeotransform.h"
+#include "qgshighlightsrenderview.h"
 #include "qgsline3dsymbol.h"
 #include "qgslinematerial_p.h"
 #include "qgslinevertexdata_p.h"
@@ -32,11 +33,14 @@
 #include "qgstessellator.h"
 #include "qgsvectorlayer.h"
 
+#include <QString>
 #include <Qt3DCore/QAttribute>
 #include <Qt3DCore/QBuffer>
 #include <Qt3DCore/QTransform>
 #include <Qt3DExtras/QPhongMaterial>
 #include <Qt3DRender/QGeometryRenderer>
+
+using namespace Qt::StringLiterals;
 
 /// @cond PRIVATE
 
@@ -210,16 +214,20 @@ void QgsBufferedLine3DSymbolHandler::makeEntity( Qt3DCore::QEntity *parent, cons
   QgsMaterialContext materialContext;
   materialContext.setIsSelected( selected );
   materialContext.setSelectionColor( context.selectionColor() );
+  materialContext.setIsHighlighted( mHighlightingEnabled );
   QgsMaterial *material = mSymbol->materialSettings()->toMaterial( QgsMaterialSettingsRenderingTechnique::Triangles, materialContext );
 
   // extract vertex buffer data from tessellator
-  const QByteArray data( ( const char * ) lineData.tessellator->data().constData(), static_cast<int>( lineData.tessellator->data().count() * sizeof( float ) ) );
-  const int nVerts = data.count() / lineData.tessellator->stride();
+  const QByteArray vertexBuffer = lineData.tessellator->vertexBuffer();
+  const QByteArray indexBuffer = lineData.tessellator->indexBuffer();
+  const int vertexCount = vertexBuffer.count() / lineData.tessellator->stride();
+  const size_t indexCount = lineData.tessellator->dataVerticesCount();
 
   const QgsPhongTexturedMaterialSettings *texturedMaterialSettings = dynamic_cast<const QgsPhongTexturedMaterialSettings *>( mSymbol->materialSettings() );
 
   QgsTessellatedPolygonGeometry *geometry = new QgsTessellatedPolygonGeometry( true, false, false, texturedMaterialSettings ? texturedMaterialSettings->requiresTextureCoordinates() : false );
-  geometry->setData( data, nVerts, lineData.triangleIndexFids, lineData.triangleIndexStartingIndices );
+  geometry->setVertexBufferData( vertexBuffer, vertexCount, lineData.triangleIndexFids, lineData.triangleIndexStartingIndices );
+  geometry->setIndexBufferData( indexBuffer, indexCount );
 
   Qt3DRender::QGeometryRenderer *renderer = new Qt3DRender::QGeometryRenderer;
   renderer->setGeometry( geometry );
@@ -372,7 +380,21 @@ void QgsThickLine3DSymbolHandler::makeEntity( Qt3DCore::QEntity *parent, const Q
   }
 
   if ( QgsLineMaterial *lineMaterial = dynamic_cast<QgsLineMaterial *>( material ) )
-    lineMaterial->setLineWidth( mSymbol->width() );
+  {
+    float width = mSymbol->width();
+    if ( mHighlightingEnabled )
+    {
+      const QgsSettings settings;
+      const QColor color = QColor( settings.value( u"Map/highlight/color"_s, Qgis::DEFAULT_HIGHLIGHT_COLOR.name() ).toString() );
+      lineMaterial->setLineColor( color );
+      // This is a workaround, make lines thicker to avoid rendering thin lines as three parallel lines with a gap between them
+      // Ideally we would want highlighted lines to be:
+      // - Rendered with an increased line width during highlights render view first pass
+      // - Not rendered during highlights render view second pass (multi-viewport one)
+      width = std::max<float>( static_cast<float>( QgsHighlightsRenderView::silhouetteWidth() * 2 ), mSymbol->width() );
+    }
+    lineMaterial->setLineWidth( width );
+  }
 
   Qt3DCore::QEntity *entity = new Qt3DCore::QEntity;
 

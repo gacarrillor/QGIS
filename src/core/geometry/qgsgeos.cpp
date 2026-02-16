@@ -33,6 +33,10 @@ email                : marco.hugentobler at sourcepole dot com
 #include "qgspolygon.h"
 #include "qgspolyhedralsurface.h"
 
+#include <QString>
+
+using namespace Qt::StringLiterals;
+
 #define DEFAULT_QUADRANT_SEGMENTS 8
 
 #define CATCH_GEOS(r) \
@@ -653,6 +657,11 @@ bool QgsGeos::distanceWithin( const QgsAbstractGeometry *geom, double maxdist, Q
   if ( !mGeos )
   {
     return false;
+  }
+
+  if ( qgsDoubleNear( maxdist, 0.0 ) )
+  {
+    return intersects( geom, errorMsg );
   }
 
   geos::unique_ptr otherGeosGeom;

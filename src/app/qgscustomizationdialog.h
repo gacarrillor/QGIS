@@ -22,6 +22,10 @@
 #include "qgscustomization.h"
 #include "qgssettingstree.h"
 
+#include <QString>
+
+using namespace Qt::StringLiterals;
+
 class QgisApp;
 class QSortFilterProxyModel;
 
@@ -137,6 +141,11 @@ class APP_EXPORT QgsCustomizationDialog : public QMainWindow, private Ui::QgsCus
      * Called whenever selected items from the item visibility treeview has changed
      */
     void selectedItemsChanged();
+
+    /**
+     * Called whenever rows have been inserted
+     */
+    void onRowsInserted( const QModelIndex &parent, int first, int );
 
   private:
     /**

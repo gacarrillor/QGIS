@@ -11,6 +11,7 @@ include_directories(
 
 set(TESTS
   testqgisapp.cpp
+  testqgisappwidgetnames.cpp
   testqgsappbrowserproviders.cpp
   testqgisappclipboard.cpp
   testqgisappdockwidgets.cpp
@@ -20,6 +21,7 @@ set(TESTS
   testqgscustomization.cpp
   testqgsdecorationscalebar.cpp
   testqgsdwgimportdialog.cpp
+  testqgselevationprofilewidget.cpp
   testqgsfieldcalculator.cpp
   testqgsidentify.cpp
   testqgslayerpropertiesdialogs.cpp
@@ -42,6 +44,7 @@ set(TESTS
   testqgsmaptoolfeaturearray.cpp
   testqgsmaptoolellipse.cpp
   testqgsmaptoolcircle.cpp
+  testqgsmaptoolnurbs.cpp
   testqgsmaptoolrectangle.cpp
   testqgsmaptoolregularpolygon.cpp
   testqgsmaptoolsplitparts.cpp

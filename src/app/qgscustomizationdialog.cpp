@@ -30,17 +30,20 @@
 #include <QMimeData>
 #include <QPushButton>
 #include <QSortFilterProxyModel>
+#include <QString>
 #include <QToolButton>
 #include <QWidgetAction>
 #include <qnamespace.h>
 
 #include "moc_qgscustomizationdialog.cpp"
 
+using namespace Qt::StringLiterals;
+
 #ifdef QGIS_DEBUG
 #include <QAbstractItemModelTester>
 #endif
 
-constexpr int TOOLBAR_COLUMN = 4;
+constexpr int TOOLBAR_ROW = 4;
 
 const QgsSettingsEntryString *QgsCustomizationDialog::sSettingLastSaveDir = new QgsSettingsEntryString( u"last-save-directory"_s, sTreeCustomization, QDir::homePath(), u"Last directory used when saving a customization XML file"_s );
 
@@ -218,7 +221,6 @@ void QgsCustomizationDialog::QgsCustomizationModel::init()
 {
   mCustomization = std::make_unique<QgsCustomization>( *mQgisApp->customization() );
   mRootItems.clear();
-  // NOLINTBEGIN(bugprone-branch-clone)
   switch ( mMode )
   {
     case Mode::ActionSelector:
@@ -235,7 +237,6 @@ void QgsCustomizationDialog::QgsCustomizationModel::init()
                  << mCustomization->toolBarsItem();
       break;
   }
-  // NOLINTEND(bugprone-branch-clone)
 }
 
 void QgsCustomizationDialog::QgsCustomizationModel::reset()
@@ -328,7 +329,6 @@ void QgsCustomizationDialog::QgsCustomizationModel::deleteUserItems( const QMode
   QHash<QgsCustomization::QgsItem *, QModelIndex>::iterator it = toDelete.begin();
   while ( it != toDelete.end() )
   {
-    // NOLINTBEGIN(bugprone-branch-clone)
     if ( alreadyDeleted( it.key() ) )
     {
       it = toDelete.erase( it );
@@ -337,7 +337,6 @@ void QgsCustomizationDialog::QgsCustomizationModel::deleteUserItems( const QMode
     {
       ++it;
     }
-    // NOLINTEND(bugprone-branch-clone)
   }
 
   for ( QHash<QgsCustomization::QgsItem *, QModelIndex>::const_iterator it = toDelete.cbegin(); it != toDelete.cend(); ++it )
@@ -403,6 +402,9 @@ bool QgsCustomizationDialog::QgsCustomizationModel::dropMimeData( const QMimeDat
   if ( action == Qt::IgnoreAction )
     return true;
 
+  if ( row == -1 )
+    row = rowCount( parent ); // if dropped directly onto group item, insert at last position
+
   QgsCustomization::QgsItem *item = parent.isValid() ? static_cast<QgsCustomization::QgsItem *>( parent.internalPointer() ) : nullptr;
   if ( !item || !item->hasCapability( QgsCustomization::QgsItem::ItemCapability::AddActionRefChild ) || !data || !data->hasFormat( QStringLiteral( ACTIONPATHS_MIMEDATA_NAME ) ) )
     return false;
@@ -426,9 +428,6 @@ bool QgsCustomizationDialog::QgsCustomizationModel::dropMimeData( const QMimeDat
 
   if ( actions.isEmpty() )
     return false;
-
-  if ( row == -1 )
-    row = 0; // if dropped directly onto group item, insert at first position
 
   beginInsertRows( parent, row, row + static_cast<int>( actions.count() ) - 1 );
   for ( QPair<QgsCustomization::QgsActionItem *, QString> actionAndPath : actions )
@@ -503,6 +502,7 @@ QgsCustomizationDialog::QgsCustomizationDialog( QgisApp *qgisApp )
     proxyModel->setRecursiveFilteringEnabled( true );
     proxyModel->setSourceModel( mItemsVisibilityModel );
     mTreeView->setModel( proxyModel );
+    mTreeView->setAutoScroll( true );
     mTreeView->resizeColumnToContents( 0 );
     mTreeView->header()->resizeSection( 0, 250 );
     mTreeView->setContextMenuPolicy( Qt::ContextMenuPolicy::ActionsContextMenu );
@@ -510,6 +510,7 @@ QgsCustomizationDialog::QgsCustomizationDialog( QgisApp *qgisApp )
     connect( mFilterLe, &QgsFilterLineEdit::valueChanged, proxyModel, &QSortFilterProxyModel::setFilterFixedString );
     connect( mTreeView->selectionModel(), &QItemSelectionModel::currentChanged, this, &QgsCustomizationDialog::currentItemChanged );
     connect( mTreeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &QgsCustomizationDialog::selectedItemsChanged );
+    connect( mItemsVisibilityModel, &QAbstractItemModel::rowsInserted, this, &QgsCustomizationDialog::onRowsInserted );
   }
 
   mActionsTreeView->setEnabled( false );
@@ -663,13 +664,16 @@ void QgsCustomizationDialog::selectedItemsChanged()
   mDeleteAction->setToolTip( tooltip );
 }
 
+void QgsCustomizationDialog::onRowsInserted( const QModelIndex &parent, int first, int )
+{
+  const QModelIndex newIndex = treeViewModel()->mapFromSource( mItemsVisibilityModel->index( first, 0, parent ) );
+  mTreeView->setCurrentIndex( newIndex );
+}
+
 void QgsCustomizationDialog::addUserItem()
 {
   const QModelIndex parentIndex = treeViewModel()->mapToSource( mTreeView->selectionModel()->currentIndex() );
-  const QModelIndex userItemIndex = mItemsVisibilityModel->addUserItem( parentIndex );
-  const QModelIndex viewUserItemIndex = treeViewModel()->mapFromSource( userItemIndex );
-  mTreeView->scrollTo( viewUserItemIndex );
-  mTreeView->setCurrentIndex( viewUserItemIndex );
+  ( void ) mItemsVisibilityModel->addUserItem( parentIndex );
 }
 
 void QgsCustomizationDialog::deleteSelectedItems()
@@ -733,7 +737,7 @@ bool QgsCustomizationDialog::selectWidget( QWidget *widget )
   }
 
   QModelIndexList items = mItemsVisibilityModel->match(
-    mItemsVisibilityModel->index( TOOLBAR_COLUMN, 0 ),
+    mItemsVisibilityModel->index( TOOLBAR_ROW, 0 ),
     Qt::DisplayRole,
     widgetName,
     2,

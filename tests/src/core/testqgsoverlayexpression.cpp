@@ -17,7 +17,8 @@
 
 #include <QObject>
 #include <QString>
-#include <QtConcurrentMap>
+
+using namespace Qt::StringLiterals;
 
 //header for class being tested
 #include "qgsexpression.h"
