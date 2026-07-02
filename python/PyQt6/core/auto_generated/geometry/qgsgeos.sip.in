@@ -914,6 +914,7 @@ geometry collection. All members must be POLYGON or MULTIPOLYGON.
 
 
 
+
   private:
     QgsGeos( const QgsGeos & );
 };
